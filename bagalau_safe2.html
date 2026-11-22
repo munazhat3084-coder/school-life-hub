@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Алтын Кілт — Интерактивті Бағалау Тақтасы</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Montserrat & Inter (Кириллица қолдауымен) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Montserrat', 'sans-serif'],
+                    },
+                    colors: {
+                        gold: {
+                            300: '#FDE047',
+                            400: '#FACC15',
+                            500: '#EAB308',
+                            600: '#CA8A04',
+                        },
+                        neon: {
+                            white: '#FFFFFF',
+                            violet: '#C084FC',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Ашық неон фон: қызғылт, көгілдір, сары және ақ жарқыл */
+        body {
+            background:
+                radial-gradient(circle at 10% 12%, rgba(255, 105, 220, 0.38) 0%, transparent 38%),
+                radial-gradient(circle at 90% 10%, rgba(80, 230, 255, 0.45) 0%, transparent 40%),
+                radial-gradient(circle at 85% 88%, rgba(255, 240, 90, 0.45) 0%, transparent 40%),
+                radial-gradient(circle at 12% 90%, rgba(120, 255, 190, 0.42) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.9) 0%, transparent 60%),
+                linear-gradient(135deg, #f3f8ff 0%, #fff6fd 50%, #effffa 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: #0f172a;
+            overflow-x: hidden;
+        }
+
+        /* Ақ шыны + неон жиек */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.78);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 2px solid rgba(56, 189, 248, 0.55);
+            box-shadow:
+                0 8px 28px rgba(99, 102, 241, 0.16),
+                0 0 18px rgba(34, 211, 238, 0.35),
+                inset 0 0 12px rgba(255, 255, 255, 0.9);
+        }
+
+        .neon-white-text {
+            text-shadow: 0 0 8px rgba(255, 255, 255, 1), 0 0 16px rgba(34, 211, 238, 0.5);
+        }
+
+        .neon-white-box {
+            border: 1px solid rgba(56, 189, 248, 0.6);
+            box-shadow: 0 0 15px rgba(34, 211, 238, 0.35), inset 0 0 8px rgba(255, 255, 255, 0.6);
+        }
+
+        .student-card {
+            background: linear-gradient(145deg, #e0f2fe 0%, #bae6fd 100%);
+            border: 2px solid #38bdf8;
+            box-shadow: 0 8px 24px rgba(14, 116, 144, 0.25), inset 0 0 14px rgba(255, 255, 255, 0.6);
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .student-card:hover {
+            transform: translateY(-4px);
+            border-color: #e879f9;
+            box-shadow:
+                0 12px 30px rgba(192, 38, 211, 0.30),
+                0 0 24px rgba(232, 121, 249, 0.55),
+                inset 0 0 16px rgba(255, 255, 255, 0.7);
+        }
+
+        .student-card:active {
+            transform: scale(0.98);
+        }
+
+        .student-card.passed-threshold {
+            border-color: #10b981;
+            background: linear-gradient(145deg, #d1fae5 0%, #a7f3d0 100%);
+            box-shadow:
+                0 8px 28px rgba(16, 185, 129, 0.35),
+                0 0 20px rgba(110, 231, 183, 0.7),
+                inset 0 0 18px rgba(255, 255, 255, 0.6);
+        }
+
+        /* Гистограмма бағаналарының анимациясы */
+        .hist-bar {
+            transition: height 0.55s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.3s ease;
+        }
+
+        /* КІЛТ ТҮСУ АНИМАЦИЯСЫ */
+        @keyframes keyDropIn {
+            0% {
+                opacity: 0;
+                transform: translateY(-48px) scale(1.85) rotate(-35deg);
+                filter: drop-shadow(0 0 18px #ffffff) drop-shadow(0 0 28px #fde047) brightness(2);
+            }
+            55% {
+                opacity: 1;
+                transform: translateY(4px) scale(0.92) rotate(8deg);
+                filter: drop-shadow(0 0 14px #facc15) brightness(1.5);
+            }
+            75% {
+                transform: translateY(-3px) scale(1.08) rotate(-4deg);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1) rotate(0deg);
+                filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.75));
+            }
+        }
+
+        .key-drop-anim {
+            animation: keyDropIn 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            display: inline-block;
+        }
+
+        /* ЖАРҚ ЕТІП ЖАНУ (WHITE NEON + GOLD FLASH) АНИМАЦИЯСЫ */
+        @keyframes cardGoldenFlash {
+            0% {
+                box-shadow: 
+                    0 0 0 0 rgba(255, 255, 255, 0.95),
+                    0 0 35px 10px rgba(253, 224, 71, 0.75),
+                    inset 0 0 35px rgba(255, 255, 255, 0.7);
+                border-color: #ffffff;
+            }
+            50% {
+                box-shadow: 
+                    0 0 40px 14px rgba(255, 255, 255, 0.45),
+                    0 0 25px rgba(250, 204, 21, 0.55),
+                    inset 0 0 45px rgba(253, 224, 71, 0.35);
+                border-color: #fef08a;
+            }
+            100% {
+                box-shadow: 0 8px 24px rgba(14, 116, 144, 0.25), inset 0 0 14px rgba(255, 255, 255, 0.6);
+            }
+        }
+
+        .flash-active {
+            animation: cardGoldenFlash 0.75s ease-out;
+        }
+
+        /* Жарқыраған ақ-алтын сәуле толқыны */
+        @keyframes radialBurst {
+            0% {
+                transform: translate(-50%, -50%) scale(0.2);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(2.5);
+                opacity: 0;
+            }
+        }
+
+        .spark-burst {
+            position: absolute;
+            width: 115px;
+            height: 115px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.98) 0%, rgba(254, 240, 138, 0.75) 40%, rgba(192, 132, 252, 0) 75%);
+            pointer-events: none;
+            z-index: 20;
+            animation: radialBurst 0.65s ease-out forwards;
+        }
+
+        /* Ұшқын бөлшектері */
+        @keyframes particleFly {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--tx), var(--ty)) scale(0);
+                opacity: 0;
+            }
+        }
+
+        .spark-particle {
+            position: absolute;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #f59e0b;
+            box-shadow: 0 0 10px #fde047, 0 0 16px #f59e0b;
+            pointer-events: none;
+            z-index: 25;
+            animation: particleFly 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* +1 Қалқымалы жазу */
+        @keyframes floatScoreUp {
+            0% {
+                opacity: 0;
+                transform: translateY(5px) scale(0.7);
+            }
+            30% {
+                opacity: 1;
+                transform: translateY(-14px) scale(1.15);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-34px) scale(0.95);
+            }
+        }
+
+        .float-plus-one {
+            position: absolute;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 800;
+            color: #c2410c;
+            text-shadow: 0 0 8px #ffffff, 0 0 14px #fde047;
+            pointer-events: none;
+            z-index: 30;
+            animation: floatScoreUp 0.8s ease-out forwards;
+        }
+
+        /* Скроллбар дизайны */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(226, 232, 240, 0.8);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(56, 189, 248, 0.6);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(232, 121, 249, 0.8);
+        }
+
+        /* ===== СЕЙФ КАРТОЧКАЛАРЫ ===== */
+        .student-card.safe-card {
+            border-radius: 26px;
+            padding: 10px;
+            min-height: 232px;
+            background: linear-gradient(150deg, #e0f2fe 0%, #bae6fd 55%, #a5d8fb 100%);
+            border: 3px solid #38bdf8;
+            box-shadow: 0 10px 26px rgba(14,116,144,0.30), inset 0 0 0 3px rgba(255,255,255,0.75), inset 0 2px 10px rgba(255,255,255,0.9);
+            overflow: hidden;
+        }
+        .student-card.safe-card.passed-threshold {
+            background: linear-gradient(150deg, #d1fae5 0%, #a7f3d0 55%, #86efac 100%);
+            border-color: #10b981;
+            box-shadow: 0 10px 28px rgba(16,185,129,0.40), 0 0 22px rgba(255,255,255,0.7), inset 0 0 0 3px rgba(255,255,255,0.8);
+        }
+        .safe-plate {
+            background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+            border: 2px solid #94a3b8;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(15,23,42,0.18), inset 0 0 8px rgba(148,163,184,0.25);
+        }
+        .safe-cavity {
+            position: relative;
+            height: 118px;
+            border-radius: 16px;
+            perspective: 700px;
+            background: radial-gradient(circle at 60% 50%, #fff7ed 0%, #fed7aa 85%);
+            border: 3px solid #fb923c;
+            box-shadow: inset 0 0 18px rgba(194,65,12,0.35);
+            overflow: hidden;
+        }
+        .safe-cavity.lit {
+            background: radial-gradient(circle at 62% 50%, #ffffff 0%, #fde68a 40%, #f59e0b 100%);
+            box-shadow: inset 0 0 22px rgba(217,119,6,0.55), 0 0 16px rgba(250,204,21,0.55);
+        }
+        .safe-door {
+            position: absolute; inset: 0;
+            transform-origin: left center;
+            border-radius: 14px;
+            background: linear-gradient(145deg, #f5d0fe 0%, #d8b4fe 50%, #c4b5fd 100%);
+            border: 3px solid #a855f7;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: inset 0 0 14px rgba(255,255,255,0.7), 0 3px 8px rgba(88,28,135,0.35);
+            z-index: 5;
+        }
+        .safe-door.is-open { transform: rotateY(-114deg); }
+        .safe-door.door-anim { animation: doorSwing 0.95s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+        @keyframes doorSwing {
+            0% { transform: rotateY(0deg); }
+            18% { transform: rotateY(4deg); }
+            100% { transform: rotateY(-114deg); }
+        }
+        .safe-bolt { position:absolute; width:8px; height:8px; border-radius:50%; background: radial-gradient(circle at 35% 30%, #ffffff, #64748b 70%, #1e293b 100%); box-shadow:0 1px 2px rgba(15,23,42,0.6); }
+        .safe-key-wrap { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:10px; padding-left:18px; z-index:2; }
+        .safe-key-big { filter: drop-shadow(0 0 2px #92400e) drop-shadow(0 3px 4px rgba(120,53,15,0.55)); }
+        .safe-count {
+            font-family: 'Outfit', 'Inter', sans-serif; font-weight: 800; font-size: 34px; line-height: 1;
+            color: #b45309; text-shadow: 0 0 10px rgba(255,255,255,0.95), 0 1px 0 #fff;
+        }
+        .safe-count small { font-size: 18px; margin-right: 1px; color: #78350f; }
+        .safe-count.bump { animation: countBump 0.5s ease; }
+        @keyframes countBump { 0% { transform: scale(0.5); } 60% { transform: scale(1.35); } 100% { transform: scale(1); } }
+        .safe-screen {
+            flex: 1; min-width: 0; align-self: stretch; margin: 12px 12px 12px 8px;
+            background: linear-gradient(160deg, #fffbeb 0%, #fde68a 100%); border: 3px solid #f59e0b; border-radius: 10px;
+            box-shadow: inset 0 0 10px rgba(217,119,6,0.30), 0 0 0 2px #fff;
+            padding: 5px 6px; display: flex; flex-wrap: wrap; align-content: flex-start; align-items: center; gap: 1px; overflow: hidden;
+        }
+        .safe-door { justify-content: flex-start; padding-left: 14px; gap: 0; }
+        .safe-led { width:9px; height:9px; border-radius:50%; }
+    </style>
+</head>
+<body class="antialiased selection:bg-fuchsia-200 selection:text-slate-900">
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+        <linearGradient id="goldBig" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#FFFFFF"/><stop offset="30%" stop-color="#FEF08A"/>
+            <stop offset="70%" stop-color="#FACC15"/><stop offset="100%" stop-color="#CA8A04"/>
+        </linearGradient>
+    </defs></svg>
+
+    <!-- Жоғарғы басқару панелі (Header) -->
+    <header class="sticky top-0 z-40 glass-panel border-b border-sky-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                
+                <!-- Логотип және Атауы -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-200 via-yellow-400 to-amber-500 flex items-center justify-center shadow-[0_0_20px_rgba(34,211,238,0.45)] border border-sky-300">
+                            <!-- Алтын кілт SVG иконкасы -->
+                            <svg class="w-6 h-6 text-amber-900" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="font-display font-extrabold text-xl sm:text-2xl tracking-tight text-slate-900 neon-white-text flex items-center gap-2">
+                                АЛТЫН КІЛТ
+                                <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-white/80 text-slate-900 border border-sky-300 shadow-[0_0_12px_rgba(34,211,238,0.25)]">
+                                    Бағалау тақтасы
+                                </span>
+                            </h1>
+                            <p class="text-xs text-slate-600">Оқушының сейфін басып, әр тапсырма үшін алтын кілт сыйлаңыз</p>
+                        </div>
+                    </div>
+
+                    <!-- Дыбыс батырмасы (Мобильді нұсқа үшін оң жақта) -->
+                    <button id="soundToggleMobile" onclick="toggleSound()" class="lg:hidden p-2.5 rounded-xl bg-white/80 hover:bg-white border border-sky-300 text-slate-900 shadow-[0_0_12px_rgba(34,211,238,0.2)] transition" title="Дыбысты қосу/өшіру">
+                        <span class="sound-icon">🔊</span>
+                    </button>
+                </div>
+
+                <!-- Баптаулар мен Негізгі Батырмалар -->
+                <div class="flex flex-wrap items-center gap-2.5 sm:gap-3">
+                    
+                    <!-- Шектік балл енгізу өрісі -->
+                    <div class="flex items-center gap-2 bg-white/85 border border-sky-300 shadow-[0_0_15px_rgba(34,211,238,0.15)] rounded-xl px-3 py-1.5">
+                        <label for="thresholdInput" class="text-xs sm:text-sm font-medium text-slate-900 whitespace-nowrap">
+                            🎯 Шектік балл:
+                        </label>
+                        <input 
+                            type="number" 
+                            id="thresholdInput" 
+                            min="1" 
+                            max="100" 
+                            value="5" 
+                            onchange="updateThreshold()"
+                            oninput="updateThreshold()"
+                            class="w-16 bg-white/85 text-amber-600 font-display font-bold text-center text-base rounded-lg border border-sky-300 shadow-[0_0_10px_rgba(34,211,238,0.25)] focus:outline-none focus:ring-2 focus:ring-sky-400 py-1"
+                        >
+                    </div>
+
+                    <!-- Оқушы қосу / Тізімді өңдеу батырмасы -->
+                    <button onclick="openStudentsModal()" class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/80 hover:bg-white text-slate-900 border border-sky-300 shadow-[0_0_15px_rgba(34,211,238,0.18)] font-medium text-sm transition cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                        </svg>
+                        <span>Оқушылар тізімі</span>
+                    </button>
+
+                    <!-- Бекіту батырмасы: сейфтерді ашады -->
+                    <button id="finalizeBtn" onclick="toggleFinalize()" class="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-300 text-violet-800 hover:bg-amber-200 font-bold text-sm border border-white shadow-[0_0_16px_rgba(250,204,21,0.5)] transition cursor-pointer">
+                        🔒 Бекіту
+                    </button>
+
+                    <!-- Мониторинг (Қорытынды) батырмасы -->
+                    <button onclick="openMonitoringModal()" class="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-fuchsia-200 via-pink-100 to-cyan-200 text-fuchsia-900 hover:brightness-105 font-bold text-sm border-2 border-fuchsia-400 shadow-[0_0_20px_rgba(232,121,249,0.6)] transition cursor-pointer">
+                        <svg class="w-4 h-4 text-purple-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                        <span>Мониторинг</span>
+                    </button>
+
+                    <!-- Дыбыс батырмасы (Desktop) -->
+                    <button id="soundToggleDesktop" onclick="toggleSound()" class="hidden lg:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/80 hover:bg-white border border-sky-300 text-slate-900 shadow-[0_0_12px_rgba(34,211,238,0.15)] text-sm font-medium transition cursor-pointer" title="Дыбысты қосу/өшіру">
+                        <span class="sound-icon">🔊</span>
+                        <span class="sound-label text-xs text-slate-600">Дыбыс қосулы</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Негізгі жұмыс аймағы -->
+    <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3.5">
+        
+        <!-- Жылдам статистика жолағы және Жылдам оқушы қосу -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 mb-3.5">
+            
+            <!-- Жылдам оқушы қосу формасы -->
+            <form onsubmit="quickAddStudent(event)" class="lg:col-span-5 glass-panel rounded-2xl p-2.5 flex items-center gap-2">
+                <input 
+                    type="text" 
+                    id="quickStudentName" 
+                    placeholder="Жаңа оқушының аты-жөні..." 
+                    class="flex-1 bg-white/85 text-slate-900 placeholder-slate-400 text-xs sm:text-sm rounded-xl px-3 py-2 border border-sky-300 focus:outline-none focus:border-sky-500 focus:shadow-[0_0_12px_rgba(34,211,238,0.3)]"
+                >
+                <button type="submit" class="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-violet-800 font-extrabold text-xs sm:text-sm transition whitespace-nowrap border border-sky-300 shadow-[0_0_16px_rgba(250,204,21,0.45)] cursor-pointer">
+                    + Қосу
+                </button>
+            </form>
+
+            <!-- Тірі көрсеткіштер (Live Mini Stats) -->
+            <div class="lg:col-span-7 grid grid-cols-3 gap-2.5">
+                <div class="glass-panel rounded-2xl px-3 py-2 flex flex-col justify-center items-center text-center">
+                    <span class="text-[11px] text-slate-600">Барлық оқушы</span>
+                    <span id="statTotalStudents" class="font-display font-extrabold text-lg sm:text-xl text-slate-900 neon-white-text leading-tight">0</span>
+                </div>
+                <div class="glass-panel rounded-2xl px-3 py-2 flex flex-col justify-center items-center text-center">
+                    <span class="text-[11px] text-slate-600">Жалпы кілттер</span>
+                    <span id="statTotalKeys" class="font-display font-extrabold text-lg sm:text-xl text-amber-600 drop-shadow-[0_0_10px_rgba(250,204,21,0.6)] leading-tight">0 🔑</span>
+                </div>
+                <div class="glass-panel rounded-2xl px-3 py-2 flex flex-col justify-center items-center text-center">
+                    <span class="text-[11px] text-slate-600">Шектік баллдан өтті</span>
+                    <span id="statPassedCount" class="font-display font-extrabold text-lg sm:text-xl text-emerald-700 drop-shadow-[0_0_10px_rgba(52,211,153,0.6)] leading-tight">0 / 0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Оқушылар карточкаларының ықшам торы (12 оқушы бір бетте: 4x3) -->
+        <div id="studentsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+            <!-- Карточкалар JavaScript арқылы салынады -->
+        </div>
+
+        <!-- Егер оқушылар тізімі бос болса -->
+        <div id="emptyState" class="hidden glass-panel rounded-3xl p-12 text-center max-w-lg mx-auto mt-8">
+            <div class="text-5xl mb-4">🗝️</div>
+            <h3 class="font-display font-bold text-xl text-slate-900 neon-white-text mb-2">Оқушылар тізімі әзірге бос</h3>
+            <p class="text-slate-600 text-sm mb-6">Сабақты бастау үшін жоғарыдағы өріс арқылы оқушыларды қосыңыз немесе тізімді жүктеңіз.</p>
+            <button onclick="openStudentsModal()" class="px-5 py-2.5 rounded-xl bg-white text-violet-800 hover:bg-purple-50 font-bold text-sm shadow-[0_0_20px_rgba(34,211,238,0.5)] transition cursor-pointer">
+                Оқушылар тізімін енгізу
+            </button>
+        </div>
+
+        <!-- Төменгі бақылау панелі -->
+        <div class="mt-3.5 flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-sky-300 text-xs text-slate-600">
+            <div class="flex items-center gap-2">
+                <span class="inline-block w-2 h-2 rounded-full bg-white shadow-[0_0_10px_#ffffff] animate-pulse"></span>
+                <span>Оқушының сейфін басыңыз — <strong class="text-amber-600">Алтын кілт</strong> түседі. Соңында «Бекіту» басқанда сейфтер ашылады!</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="resetAllScores()" class="px-2.5 py-1 rounded-lg bg-white/80 hover:bg-rose-500/30 text-slate-900 border border-sky-300 hover:border-rose-300 transition cursor-pointer">
+                    🔄 Баллдарды нөлдеу
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- МОДАЛЬ 1: Оқушылар тізімін басқару -->
+    <div id="studentsModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-sky-100/70 backdrop-blur-md p-4">
+        <div class="bg-white/95 border border-sky-300 shadow-[0_0_35px_rgba(34,211,238,0.2)] rounded-3xl max-w-lg w-full p-6 transform transition-all">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-display font-bold text-xl text-slate-900 neon-white-text flex items-center gap-2">
+                    👥 Оқушылар тізімін өңдеу
+                </h2>
+                <button onclick="closeStudentsModal()" class="text-slate-600 hover:text-slate-900 p-1.5 rounded-lg hover:bg-white/15 transition cursor-pointer">
+                    ✕
+                </button>
+            </div>
+            
+            <p class="text-xs text-slate-600 mb-3 leading-relaxed">
+                Әр оқушының аты-жөнін жаңа жолдан жазыңыз. Excel немесе Word құжатынан көшіріп қоюға болады:
+            </p>
+
+            <textarea 
+                id="bulkStudentsTextarea" 
+                rows="9" 
+                placeholder="Мысалы:&#10;Әлихан Нұрланұлы&#10;Айзере Серікқызы&#10;Санжар Болатұлы"
+                class="w-full bg-white/85 text-slate-900 text-sm rounded-2xl p-4 border border-sky-300 focus:outline-none focus:border-sky-500 focus:shadow-[0_0_15px_rgba(34,211,238,0.25)] leading-relaxed"
+            ></textarea>
+
+            <div class="flex flex-wrap items-center justify-between gap-2 mt-4">
+                <button onclick="loadSampleStudents()" class="text-xs text-slate-900 hover:text-amber-600 underline cursor-pointer">
+                    Үлгі тізімді жүктеу
+                </button>
+                <div class="flex items-center gap-2">
+                    <button onclick="closeStudentsModal()" class="px-4 py-2 rounded-xl bg-white/80 hover:bg-white text-slate-900 border border-sky-300 text-sm font-medium transition cursor-pointer">
+                        Болдырмау
+                    </button>
+                    <button onclick="saveBulkStudents()" class="px-5 py-2 rounded-xl bg-white hover:bg-purple-50 text-violet-800 font-bold text-sm shadow-[0_0_18px_rgba(34,211,238,0.45)] transition cursor-pointer">
+                        Сақтау
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬ 2: Сабақ соңындағы Мониторинг -->
+    <div id="monitoringModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-sky-100/70 backdrop-blur-md p-3 sm:p-4 overflow-y-auto">
+        <div class="bg-gradient-to-br from-white via-sky-50 to-fuchsia-50 border-[3px] border-fuchsia-300 shadow-[0_0_45px_rgba(232,121,249,0.45),0_0_90px_rgba(34,211,238,0.30)] rounded-3xl max-w-5xl w-full p-4 sm:p-6 my-auto flex flex-col">
+            
+            <!-- Мониторинг тақырыбы -->
+            <div class="flex items-center justify-between pb-3 border-b border-sky-300">
+                <div>
+                    <span class="inline-block text-[11px] font-bold uppercase tracking-wider text-fuchsia-700 bg-fuchsia-100 border border-fuchsia-300 rounded-full px-2.5 py-0.5 mb-1">Сабақ қорытындысы</span>
+                    <h2 class="font-display font-extrabold text-lg sm:text-xl bg-gradient-to-r from-fuchsia-600 via-violet-600 to-cyan-600 bg-clip-text text-transparent flex items-center gap-2">
+                        📊 Оқушылар үлгерімінің мониторингі және гистограммасы
+                    </h2>
+                </div>
+                <button onclick="closeMonitoringModal()" class="text-slate-600 hover:text-slate-900 p-1.5 rounded-xl hover:bg-white/15 transition cursor-pointer">
+                    ✕
+                </button>
+            </div>
+
+            <!-- Негізгі аналитикалық карточкалар -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 my-3.5">
+                <div class="rounded-2xl p-2.5 text-center bg-gradient-to-br from-sky-100 to-cyan-100 border-2 border-cyan-400 shadow-[0_0_14px_rgba(34,211,238,0.45)]">
+                    <div class="text-[11px] text-slate-600">Шектік балл</div>
+                    <div id="monThreshold" class="font-display font-extrabold text-xl text-amber-600 mt-0.5">5 🔑</div>
+                </div>
+                <div class="rounded-2xl p-2.5 text-center bg-gradient-to-br from-violet-100 to-fuchsia-100 border-2 border-fuchsia-400 shadow-[0_0_14px_rgba(232,121,249,0.45)]">
+                    <div class="text-[11px] text-slate-600">Орташа балл</div>
+                    <div id="monAvgScore" class="font-display font-extrabold text-xl text-slate-900 neon-white-text mt-0.5">0.0</div>
+                </div>
+                <div class="rounded-2xl p-2.5 text-center bg-gradient-to-br from-amber-100 to-yellow-100 border-2 border-amber-400 shadow-[0_0_14px_rgba(250,204,21,0.55)]">
+                    <div class="text-[11px] text-slate-600">Ең жоғары нәтиже</div>
+                    <div id="monMaxScore" class="font-display font-extrabold text-xl text-amber-600 mt-0.5">0 🔑</div>
+                </div>
+                <div class="rounded-2xl p-2.5 text-center bg-gradient-to-br from-emerald-100 to-lime-100 border-2 border-emerald-500 shadow-[0_0_16px_rgba(52,211,153,0.55)]">
+                    <div class="text-[11px] text-emerald-700">Сапа көрсеткіші</div>
+                    <div id="monPassRate" class="font-display font-extrabold text-xl text-emerald-700 mt-0.5">0%</div>
+                </div>
+            </div>
+
+            <!-- Ықшам Гистограмма (Bar Chart) және Шектік балл сызығы -->
+            <div class="bg-white/90 border-2 border-sky-300 rounded-2xl p-3.5 sm:p-4 shadow-[0_0_18px_rgba(34,211,238,0.35),inset_0_0_16px_rgba(34,211,238,0.10)]">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-3 text-xs">
+                    <span class="font-display font-bold text-slate-900 flex items-center gap-1.5">
+                        📈 Оқушылар кілттерінің гистограммасы
+                    </span>
+                    <div class="flex items-center gap-3 text-[11px]">
+                        <span class="flex items-center gap-1.5 text-emerald-700">
+                            <span class="w-2.5 h-2.5 rounded-sm bg-emerald-400 inline-block shadow-[0_0_6px_#34d399]"></span>
+                            Шектік баллдан өтті
+                        </span>
+                        <span class="flex items-center gap-1.5 text-amber-600">
+                            <span class="w-2.5 h-2.5 rounded-sm bg-amber-400 inline-block shadow-[0_0_6px_#facc15]"></span>
+                            Шектік баллға жетпеді
+                        </span>
+                        <span class="flex items-center gap-1.5 text-fuchsia-700">
+                            <span class="w-3.5 h-0.5 border-t-2 border-dashed border-fuchsia-500 inline-block"></span>
+                            Шектік сызық
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Гистограмма бағандарының аймағы -->
+                <div id="histogramChart" class="relative h-44 sm:h-48 pt-5 pb-1 px-1 flex items-end justify-between gap-1.5 sm:gap-2.5 border-b-2 border-l-2 border-slate-400">
+                    <!-- Бағандар мен шектік сызық JS арқылы салынады -->
+                </div>
+            </div>
+
+            <!-- Мониторинг төменгі батырмалары -->
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-4 mt-4 border-t border-sky-300">
+                <div id="copyFeedback" class="text-xs text-emerald-700 font-medium opacity-0 transition-opacity">
+                    ✅ Нәтиже алмасу буферіне көшірілді!
+                </div>
+                <div class="flex items-center gap-2.5 ml-auto">
+                    <button onclick="copyMonitoringReport()" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/80 hover:bg-white text-slate-900 border border-sky-300 shadow-[0_0_14px_rgba(34,211,238,0.2)] font-semibold text-sm transition cursor-pointer">
+                        📋 Нәтижені көшіру
+                    </button>
+                    <button onclick="closeMonitoringModal()" class="px-5 py-2.5 rounded-xl bg-white hover:bg-purple-50 text-violet-800 font-bold text-sm shadow-[0_0_18px_rgba(34,211,238,0.45)] transition cursor-pointer">
+                        Жабу
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Хабарлама терезесі (Toast) -->
+    <div id="toastMessage" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-white/95 text-slate-900 border-2 border-fuchsia-300 shadow-[0_0_25px_rgba(232,121,249,0.5)] px-4 py-3 rounded-2xl text-sm font-medium flex items-center gap-2.5">
+        <span id="toastIcon">✨</span>
+        <span id="toastText">Хабарлама</span>
+    </div>
+
+    <script>
+        /* ==========================================================================
+           1. ДЕРЕКТЕР КҮЙІ (STATE) ЖӘНЕ БАСТАПҚЫ МӘНДЕР (12 ОҚУШЫ)
+           ========================================================================== */
+        const DEFAULT_STUDENTS = [
+            "Әлихан Нұрланұлы",
+            "Айзере Серікқызы",
+            "Санжар Болатұлы",
+            "Кәусар Ерланқызы",
+            "Нұрасыл Талғатұлы",
+            "Інжу Маратқызы",
+            "Ерасыл Қайратұлы",
+            "Медина Асқарқызы",
+            "Айдын Мұратұлы",
+            "Дария Әсетқызы",
+            "Темірлан Сәкенұлы",
+            "Амина Берікқызы"
+        ];
+
+        let state = {
+            finalized: false,
+            threshold: 5,
+            soundEnabled: true,
+            students: []
+        };
+
+        // LocalStorage-дан сақталған деректерді жүктеу
+        function loadState() {
+            try {
+                const saved = localStorage.getItem('altyn_kilt_data_v1');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    state.threshold = parsed.threshold || 5;
+                    state.soundEnabled = parsed.soundEnabled !== undefined ? parsed.soundEnabled : true;
+                    state.students = Array.isArray(parsed.students) ? parsed.students : [];
+                    state.finalized = parsed.finalized === true;
+                } else {
+                    state.students = DEFAULT_STUDENTS.map((name, idx) => ({
+                        id: Date.now() + idx,
+                        name: name,
+                        keys: 0
+                    }));
+                }
+            } catch (e) {
+                console.error("Деректерді оқу қатесі:", e);
+                state.students = DEFAULT_STUDENTS.map((name, idx) => ({
+                    id: Date.now() + idx,
+                    name: name,
+                    keys: 0
+                }));
+            }
+            document.getElementById('thresholdInput').value = state.threshold;
+            updateSoundUI();
+            updateFinalizeUI();
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem('altyn_kilt_data_v1', JSON.stringify(state));
+            } catch (e) {
+                console.warn("LocalStorage сақтау мүмкін болмады:", e);
+            }
+        }
+
+        /* ==========================================================================
+           2. WEB AUDIO API — ЖАҒЫМДЫ ДЫБЫС ЭФФЕКТІЛЕРІ (Сыртқы файлсыз!)
+           ========================================================================== */
+        let audioCtx = null;
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContextClass();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        // Алтын кілт түскендегі сиқырлы сыңғыр дыбысы
+        function playGoldenKeySound(reachedThreshold = false) {
+            if (!state.soundEnabled) return;
+            try {
+                const ctx = getAudioContext();
+                const now = ctx.currentTime;
+
+                // Негізгі жарқын қоңырау ноталары (Пентатоникалық аккорд)
+                const notes = reachedThreshold 
+                    ? [523.25, 659.25, 783.99, 1046.50, 1318.51] // Шектік баллға жеткендегі салтанатты аккорд
+                    : [880, 1318.51, 1760]; // Кәдімгі кілт түскендегі нәзік сыңғыр
+
+                notes.forEach((freq, index) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+
+                    osc.type = index === 0 ? 'sine' : 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + index * 0.055);
+                    
+                    // Жеңіл жоғары қарай сырғу (sparkle эффектісі)
+                    osc.frequency.exponentialRampToValueAtTime(freq * 1.015, now + index * 0.055 + 0.35);
+
+                    gain.gain.setValueAtTime(0.001, now + index * 0.055);
+                    gain.gain.linearRampToValueAtTime(reachedThreshold ? 0.16 : 0.14, now + index * 0.055 + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + index * 0.055 + (reachedThreshold ? 0.75 : 0.45));
+
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+
+                    osc.start(now + index * 0.055);
+                    osc.stop(now + index * 0.055 + 0.8);
+                });
+            } catch (err) {
+                console.warn("Дыбыс ойнату қатесі:", err);
+            }
+        }
+
+        // Кілт азайтылғандағы жұмсақ дыбыс
+        function playRemoveSound() {
+            if (!state.soundEnabled) return;
+            try {
+                const ctx = getAudioContext();
+                const now = ctx.currentTime;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(420, now);
+                osc.frequency.exponentialRampToValueAtTime(240, now + 0.18);
+
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.19);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } catch (e) {}
+        }
+
+        function toggleSound() {
+            state.soundEnabled = !state.soundEnabled;
+            saveState();
+            updateSoundUI();
+            if (state.soundEnabled) {
+                playGoldenKeySound(false);
+                showToast("🔊", "Дыбыс эффектілері қосылды");
+            } else {
+                showToast("🔇", "Дыбыс өшірілді");
+            }
+        }
+
+        function updateSoundUI() {
+            const icons = document.querySelectorAll('.sound-icon');
+            const labels = document.querySelectorAll('.sound-label');
+            icons.forEach(el => el.textContent = state.soundEnabled ? '🔊' : '🔇');
+            labels.forEach(el => el.textContent = state.soundEnabled ? 'Дыбыс қосулы' : 'Дыбыс өшірулі');
+        }
+
+        /* ==========================================================================
+           3. АЛТЫН КІЛТ СЫЙЛАУ ЖӘНЕ ЖАРҚ ЕТУ АНИМАЦИЯСЫ
+           ========================================================================== */
+        function createGoldenKeySVG(isNew = false) {
+            return `
+                <span class="${isNew ? 'key-drop-anim' : 'inline-block'} text-amber-600 select-none" title="Алтын кілт">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-[0_1px_1px_rgba(146,64,14,0.8)]" viewBox="0 0 24 24" fill="url(#goldGrad)" stroke="#92400e" stroke-width="0.7">
+                        <defs>
+                            <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#FEF08A" />
+                                <stop offset="35%" stop-color="#FACC15" />
+                                <stop offset="70%" stop-color="#F59E0B" />
+                                <stop offset="100%" stop-color="#B45309" />
+                            </linearGradient>
+                        </defs>
+                        <path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
+                    </svg>
+                </span>
+            `;
+        }
+
+        // Карточканы басқанда кілт қосу және жарқ еткізу
+        function awardKey(studentId, event) {
+            const student = state.students.find(s => s.id === studentId);
+            if (!student) return;
+            if (state.finalized) { showToast("🔓", "Бағалау бекітілген. Кілт қосу үшін «Бекітуді алу» батырмасын басыңыз"); return; }
+
+            const prevKeys = student.keys;
+            student.keys += 1;
+            const justReachedThreshold = (prevKeys < state.threshold && student.keys >= state.threshold);
+
+            saveState();
+            playGoldenKeySound(justReachedThreshold);
+
+            // Карточканы қайта сызу (тек сол карточканы жаңарту арқылы анимацияны сақтаймыз)
+            updateSingleCard(student, true);
+            updateTopStats();
+
+            // Жарқ ету (Flash & Sparkles) визуалды эффектісін іске қосу
+            const cardEl = document.getElementById(`card-${studentId}`);
+            if (cardEl) {
+                cardEl.classList.remove('flash-active');
+                void cardEl.offsetWidth; // Reflow
+                cardEl.classList.add('flash-active');
+
+                triggerSparkleEffect(cardEl, event);
+            }
+
+            if (justReachedThreshold) {
+                showToast("🏆", `${student.name} шектік баллға (${state.threshold} кілт) жетті!`);
+            }
+        }
+
+        // Жарқ ету толқыны мен ұшқын бөлшектерін жасау
+        function triggerSparkleEffect(cardEl, event) {
+            const rect = cardEl.getBoundingClientRect();
+            let x = rect.width / 2;
+            let y = rect.height / 2;
+
+            if (event && event.clientX && event.clientY) {
+                x = event.clientX - rect.left;
+                y = event.clientY - rect.top;
+            }
+
+            // 1. Жарқ еткен сәуле толқыны
+            const burst = document.createElement('div');
+            burst.className = 'spark-burst';
+            burst.style.left = `${x}px`;
+            burst.style.top = `${y}px`;
+            cardEl.appendChild(burst);
+            setTimeout(() => burst.remove(), 700);
+
+            // 2. "+1 🔑" қалқымалы жазуы
+            const plusOne = document.createElement('div');
+            plusOne.className = 'float-plus-one text-lg';
+            plusOne.textContent = '+1 🔑';
+            plusOne.style.left = `${Math.min(Math.max(x - 15, 16), rect.width - 60)}px`;
+            plusOne.style.top = `${Math.max(y - 15, 16)}px`;
+            cardEl.appendChild(plusOne);
+            setTimeout(() => plusOne.remove(), 850);
+
+            // 3. Жан-жаққа шашырайтын алтын ұшқындар
+            const particleCount = 12;
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'spark-particle';
+                const angle = (Math.PI * 2 * i) / particleCount + (Math.random() * 0.3);
+                const distance = 45 + Math.random() * 55;
+                const tx = Math.cos(angle) * distance;
+                const ty = Math.sin(angle) * distance;
+
+                particle.style.left = `${x}px`;
+                particle.style.top = `${y}px`;
+                particle.style.setProperty('--tx', `${tx}px`);
+                particle.style.setProperty('--ty', `${ty}px`);
+
+                cardEl.appendChild(particle);
+                setTimeout(() => particle.remove(), 700);
+            }
+        }
+
+        // Қателесіп басылған кілтті азайту (-1)
+        function removeKey(studentId, event) {
+            if (event) event.stopPropagation(); // Карточканың негізгі click оқиғасын тоқтату
+            const student = state.students.find(s => s.id === studentId);
+            if (!student || student.keys <= 0 || state.finalized) return;
+
+            student.keys -= 1;
+            saveState();
+            playRemoveSound();
+            updateSingleCard(student, false);
+            updateTopStats();
+        }
+
+        // Оқушыны тізімнен өшіру
+        function deleteStudent(studentId, event) {
+            if (event) event.stopPropagation();
+            state.students = state.students.filter(s => s.id !== studentId);
+            saveState();
+            renderAllCards();
+            updateTopStats();
+        }
+
+        /* ==========================================================================
+           4. ИНТЕРФЕЙСТІ СЫЗУ (RENDERING — 12 ОҚУШЫ ЫҚШАМ КӨРІНІС)
+           ========================================================================== */
+        function toggleFinalize() {
+            if (state.students.length === 0) return;
+            state.finalized = !state.finalized;
+            saveState();
+            updateFinalizeUI();
+            if (state.finalized) {
+                playGoldenKeySound(true);
+                renderAllCards(true);
+                showToast("🔓", "Бекітілді! Сейфтер ашылды");
+            } else {
+                renderAllCards(false);
+                showToast("🔒", "Бекіту алынды, кілт қоса беруге болады");
+            }
+        }
+
+        function updateFinalizeUI() {
+            const btn = document.getElementById('finalizeBtn');
+            if (!btn) return;
+            btn.innerHTML = state.finalized ? '🔓 Бекітуді алу' : '🔒 Бекіту';
+        }
+
+        function getCardInnerHTML(student, animateLastKey = false, animateOpen = false, delayMs = 0) {
+            const passed = student.keys >= state.threshold;
+            const isOpen = state.finalized;
+            const progressPercent = Math.min(100, Math.round((student.keys / Math.max(1, state.threshold)) * 100));
+
+            // Есіктегі экран: түскен кілттер жиналып тұрады
+            let keysVisualHTML = '';
+            if (student.keys === 0) {
+                keysVisualHTML = `<span class="text-[11px] text-amber-800/80 italic px-1">Кілт жоқ — басыңыз</span>`;
+            } else {
+                const maxVisibleIcons = 8;
+                const countToShow = Math.min(student.keys, maxVisibleIcons);
+                for (let i = 0; i < countToShow; i++) {
+                    keysVisualHTML += createGoldenKeySVG(animateLastKey && i === countToShow - 1);
+                }
+                if (student.keys > maxVisibleIcons) {
+                    keysVisualHTML += `<span class="ml-1 px-1.5 py-0.5 rounded-full bg-amber-200 text-amber-900 border border-amber-500 font-display font-bold text-[10px]">+${student.keys - maxVisibleIcons}</span>`;
+                }
+            }
+
+            const bigKey = `
+                <span class="inline-block safe-key-big" style="${student.keys === 0 ? 'opacity:0.3;filter:grayscale(1)' : ''}">
+                    <svg width="76" height="76" viewBox="0 0 24 24" fill="url(#goldBig)" aria-hidden="true">
+                        <path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
+                    </svg>
+                </span>`;
+
+            const doorClass = isOpen ? (animateOpen ? 'door-anim' : 'is-open') : '';
+            const doorStyle = animateOpen ? `style="animation-delay:${delayMs}ms"` : '';
+
+            return `
+                <div class="safe-plate flex items-center justify-between gap-2 px-2.5 py-1.5 mb-2">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="safe-led ${isOpen ? 'bg-emerald-400 shadow-[0_0_10px_#34d399]' : 'bg-rose-400 shadow-[0_0_8px_#fb7185]'}"></span>
+                        <h3 class="font-display font-bold text-sm text-slate-900 truncate leading-tight" title="${student.name}">${student.name}</h3>
+                    </div>
+                    <div class="flex items-center gap-0.5 shrink-0 ${passed ? 'text-emerald-700' : 'text-amber-600'}">
+                        <span class="font-display font-extrabold text-sm leading-none">${student.keys}</span>
+                        <span class="text-[11px]">🔑</span>
+                    </div>
+                </div>
+
+                <div class="safe-cavity ${isOpen ? 'lit' : ''}">
+                    ${isOpen ? `
+                        <div class="safe-key-wrap">
+                            ${bigKey}
+                            <span class="safe-count"><small>×</small>${student.keys}</span>
+                        </div>` : ''}
+                    <div class="safe-door ${doorClass}" ${doorStyle}>
+                        <span class="safe-bolt" style="left:8px;top:8px"></span>
+                        <span class="safe-bolt" style="left:8px;bottom:8px"></span>
+                        <span class="safe-bolt" style="right:8px;top:8px"></span>
+                        <span class="safe-bolt" style="right:8px;bottom:8px"></span>
+                        <svg width="56" height="56" viewBox="0 0 62 62" class="shrink-0" aria-hidden="true">
+                            <circle cx="31" cy="31" r="27" fill="#fdf4ff" stroke="#7c3aed" stroke-width="4"/>
+                            <circle cx="31" cy="31" r="20" fill="none" stroke="#db2777" stroke-width="2.5" stroke-dasharray="2 5" stroke-linecap="round"/>
+                            <path d="M31 12V50M12 31H50" stroke="#4c1d95" stroke-width="3.5" stroke-linecap="round"/>
+                            <circle cx="31" cy="31" r="6" fill="${passed ? '#10b981' : '#f59e0b'}" stroke="#fff" stroke-width="2"/>
+                        </svg>
+                        <div class="safe-screen">${keysVisualHTML}</div>
+                    </div>
+                </div>
+
+                <div class="w-full h-2.5 bg-white rounded-full overflow-hidden mt-2 mb-1.5 border-2 border-slate-400">
+                    <div class="h-full rounded-full transition-all duration-500 ${passed ? 'bg-gradient-to-r from-emerald-500 via-emerald-400 to-teal-500 shadow-[0_0_8px_rgba(16,185,129,0.7)]' : 'bg-gradient-to-r from-orange-500 via-amber-400 to-yellow-400 shadow-[0_0_8px_rgba(245,158,11,0.7)]'}" style="width: ${progressPercent}%"></div>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-semibold ${passed ? 'text-emerald-800' : 'text-slate-700 group-hover:text-orange-600'}">
+                        ${passed ? '✅ Шектен өтті' : (isOpen ? `🎯 Шек: ${state.threshold}` : '✨ +1 Кілт')}
+                    </span>
+                    <div class="flex items-center gap-1">
+                        <button type="button" onclick="removeKey(${student.id}, event)" ${(student.keys === 0 || isOpen) ? 'disabled' : ''}
+                            class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-rose-100 hover:bg-rose-200 border-2 border-rose-400 disabled:opacity-40 disabled:pointer-events-none text-rose-700 transition cursor-pointer"
+                            title="1 кілтті алып тастау">−1</button>
+                        <button type="button" onclick="deleteStudent(${student.id}, event)"
+                            class="px-1.5 py-0.5 rounded-md text-[11px] bg-slate-100 hover:bg-slate-200 border-2 border-slate-400 text-slate-700 transition cursor-pointer"
+                            title="Оқушыны өшіру">🗑️</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateSingleCard(student, animateLastKey = false) {
+            const cardEl = document.getElementById(`card-${student.id}`);
+            if (!cardEl) return;
+
+            const passed = student.keys >= state.threshold;
+            if (passed) {
+                cardEl.classList.add('passed-threshold');
+            } else {
+                cardEl.classList.remove('passed-threshold');
+            }
+
+            cardEl.innerHTML = getCardInnerHTML(student, animateLastKey);
+        }
+
+        function renderAllCards(animateOpen = false) {
+            const grid = document.getElementById('studentsGrid');
+            const emptyState = document.getElementById('emptyState');
+
+            if (state.students.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            grid.innerHTML = state.students.map((student, sIdx) => {
+                const passed = student.keys >= state.threshold;
+                return `
+                    <div 
+                        id="card-${student.id}"
+                        onclick="awardKey(${student.id}, event)"
+                        class="student-card safe-card ${passed ? 'passed-threshold' : ''} cursor-pointer select-none group"
+                    >
+                        ${getCardInnerHTML(student, false, animateOpen, sIdx * 90)}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateTopStats() {
+            const totalStudents = state.students.length;
+            const totalKeys = state.students.reduce((sum, s) => sum + s.keys, 0);
+            const passedCount = state.students.filter(s => s.keys >= state.threshold).length;
+
+            document.getElementById('statTotalStudents').textContent = totalStudents;
+            document.getElementById('statTotalKeys').textContent = `${totalKeys} 🔑`;
+            document.getElementById('statPassedCount').textContent = `${passedCount} / ${totalStudents}`;
+        }
+
+        /* ==========================================================================
+           5. ШЕКТІК БАЛЛ ЖӘНЕ ОҚУШЫЛАР ТІЗІМІН БАСҚАРУ
+           ========================================================================== */
+        function updateThreshold() {
+            const input = document.getElementById('thresholdInput');
+            let val = parseInt(input.value, 10);
+            if (isNaN(val) || val < 1) val = 1;
+            if (val > 100) val = 100;
+            
+            state.threshold = val;
+            saveState();
+            renderAllCards();
+            updateTopStats();
+        }
+
+        function quickAddStudent(event) {
+            event.preventDefault();
+            const input = document.getElementById('quickStudentName');
+            const name = input.value.trim();
+            if (!name) return;
+
+            state.students.push({
+                id: Date.now() + Math.floor(Math.random() * 1000),
+                name: name,
+                keys: 0
+            });
+
+            input.value = '';
+            saveState();
+            renderAllCards();
+            updateTopStats();
+            showToast("👤", `${name} тізімге қосылды`);
+        }
+
+        function openStudentsModal() {
+            const modal = document.getElementById('studentsModal');
+            const textarea = document.getElementById('bulkStudentsTextarea');
+            textarea.value = state.students.map(s => s.name).join('\n');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeStudentsModal() {
+            const modal = document.getElementById('studentsModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function loadSampleStudents() {
+            document.getElementById('bulkStudentsTextarea').value = DEFAULT_STUDENTS.join('\n');
+        }
+
+        function saveBulkStudents() {
+            const textarea = document.getElementById('bulkStudentsTextarea');
+            const lines = textarea.value
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0);
+
+            // Бар оқушылардың кілттерін сақтап қалу (егер аты сәйкес келсе)
+            const oldMap = new Map();
+            state.students.forEach(s => oldMap.set(s.name.toLowerCase(), s.keys));
+
+            state.students = lines.map((name, idx) => ({
+                id: Date.now() + idx,
+                name: name,
+                keys: oldMap.has(name.toLowerCase()) ? oldMap.get(name.toLowerCase()) : 0
+            }));
+
+            saveState();
+            renderAllCards();
+            updateTopStats();
+            closeStudentsModal();
+            showToast("✅", `Оқушылар тізімі жаңартылды (${state.students.length} оқушы)`);
+        }
+
+        function resetAllScores() {
+            if (state.students.length === 0) return;
+            state.students.forEach(s => s.keys = 0);
+            state.finalized = false;
+            updateFinalizeUI();
+            saveState();
+            renderAllCards();
+            updateTopStats();
+            showToast("🔄", "Барлық оқушылардың кілттері нөлденді");
+        }
+
+        /* ==========================================================================
+           6. САБАҚ СОҢЫНДАҒЫ МОНИТОРИНГ ЖӘНЕ ГИСТОГРАММА
+           ========================================================================== */
+        function openMonitoringModal() {
+            const modal = document.getElementById('monitoringModal');
+            const chartContainer = document.getElementById('histogramChart');
+
+            const total = state.students.length;
+            const totalKeys = state.students.reduce((sum, s) => sum + s.keys, 0);
+            const avgScore = total > 0 ? (totalKeys / total).toFixed(1) : '0.0';
+            const maxScore = total > 0 ? Math.max(...state.students.map(s => s.keys)) : 0;
+            const passedCount = state.students.filter(s => s.keys >= state.threshold).length;
+            const passRate = total > 0 ? Math.round((passedCount / total) * 100) : 0;
+
+            document.getElementById('monThreshold').textContent = `${state.threshold} 🔑`;
+            document.getElementById('monAvgScore').textContent = avgScore;
+            document.getElementById('monMaxScore').textContent = `${maxScore} 🔑`;
+            document.getElementById('monPassRate').textContent = `${passRate}%`;
+
+            // Гистограмманың максималды шкаласын есептеу
+            const maxScale = Math.max(state.threshold, maxScore, 1);
+            const thresholdPercent = Math.min(100, Math.round((state.threshold / maxScale) * 100));
+
+            if (total === 0) {
+                chartContainer.innerHTML = `<p class="w-full text-center text-slate-600 text-sm py-10">Гистограмманы көру үшін оқушылар тізімін қосыңыз.</p>`;
+            } else {
+                // Шектік балл сызығы + әр оқушыға бір баған
+                const thresholdLineHTML = `
+                    <div 
+                        style="bottom: ${thresholdPercent}%;" 
+                        class="absolute left-0 right-0 border-t-2 border-dashed border-fuchsia-500 pointer-events-none z-10 flex justify-end items-center"
+                    >
+                        <span class="bg-fuchsia-100 text-fuchsia-800 text-[10px] font-bold px-1.5 py-0.2 rounded border border-fuchsia-400 -translate-y-1/2 mr-1 shadow-[0_0_8px_rgba(232,121,249,0.5)]">
+                            Шек: ${state.threshold}
+                        </span>
+                    </div>
+                `;
+
+                const barsHTML = state.students.map((student) => {
+                    const passed = student.keys >= state.threshold;
+                    const heightPercent = student.keys > 0 
+                        ? Math.max(8, Math.round((student.keys / maxScale) * 100)) 
+                        : 2;
+                    const shortName = student.name.split(' ')[0];
+
+                    return `
+                        <div class="flex-1 h-full flex flex-col items-center justify-end min-w-0 group z-20" title="${student.name}: ${student.keys} кілт">
+                            <span class="text-[10px] sm:text-xs font-display font-extrabold mb-1 ${passed ? 'text-emerald-700' : 'text-amber-600'}">
+                                ${student.keys}
+                            </span>
+                            <div class="w-full max-w-[34px] h-[76%] flex items-end justify-center">
+                                <div 
+                                    style="height: ${heightPercent}%;" 
+                                    class="hist-bar w-full rounded-t-lg ${
+                                        student.keys === 0 
+                                            ? 'bg-white/80 border border-sky-300' 
+                                            : passed 
+                                                ? 'bg-gradient-to-t from-emerald-500 via-emerald-400 to-lime-300 border-2 border-emerald-600 shadow-[0_0_12px_rgba(16,185,129,0.55)]' 
+                                                : 'bg-gradient-to-t from-orange-500 via-amber-400 to-yellow-300 border-2 border-amber-600 shadow-[0_0_10px_rgba(245,158,11,0.55)]'
+                                    }"
+                                ></div>
+                            </div>
+                            <span class="mt-1.5 text-[10px] sm:text-[11px] text-slate-600 truncate w-full text-center font-medium">
+                                ${shortName}
+                            </span>
+                        </div>
+                    `;
+                }).join('');
+
+                chartContainer.innerHTML = thresholdLineHTML + barsHTML;
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeMonitoringModal() {
+            const modal = document.getElementById('monitoringModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // Мониторинг есебін мәтін түрінде көшіру
+        function copyMonitoringReport() {
+            const sorted = [...state.students].sort((a, b) => b.keys - a.keys);
+            const passedCount = state.students.filter(s => s.keys >= state.threshold).length;
+            const passRate = state.students.length > 0 ? Math.round((passedCount / state.students.length) * 100) : 0;
+
+            let report = `📊 САБАҚ МОНИТОРИНГІ («АЛТЫН КІЛТ»)\n`;
+            report += `🎯 Шектік балл: ${state.threshold} кілт\n`;
+            report += `✅ Шектік баллдан өткендер: ${passedCount}/${state.students.length} (${passRate}%)\n`;
+            report += `----------------------------------------\n`;
+
+            sorted.forEach((s, idx) => {
+                const status = s.keys >= state.threshold ? '✅ Өтті' : '⚠️ Жетпеді';
+                report += `${idx + 1}. ${s.name} — ${s.keys} кілт (${status})\n`;
+            });
+
+            const tempTextarea = document.createElement('textarea');
+            tempTextarea.value = report;
+            document.body.appendChild(tempTextarea);
+            tempTextarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextarea);
+
+            const feedback = document.getElementById('copyFeedback');
+            feedback.classList.remove('opacity-0');
+            setTimeout(() => feedback.classList.add('opacity-0'), 2500);
+        }
+
+        /* ==========================================================================
+           7. ХАБАРЛАМА (TOAST) ЖӘНЕ БАСТАПҚЫ ІСКЕ ҚОСУ
+           ========================================================================== */
+        let toastTimer = null;
+        function showToast(icon, text) {
+            const toast = document.getElementById('toastMessage');
+            document.getElementById('toastIcon').textContent = icon;
+            document.getElementById('toastText').textContent = text;
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2600);
+        }
+
+        // Бет жүктелгенде іске қосу
+        window.onload = function() {
+            loadState();
+            renderAllCards();
+            updateTopStats();
+        };
+    </script>
+</body>
+</html>
